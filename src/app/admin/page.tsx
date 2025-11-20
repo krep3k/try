@@ -2,11 +2,46 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Bar } from "react-chartjs-2";
+import { Chart as ChartJs, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+
+ChartJs.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function adminPage() {
     const {data: session, status} = useSession();
+    const [salesData, setSalesData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    if (status === "loading") {
+    useEffect(() => {
+        async function fetchSalesData() {
+            try {
+                const res = await fetch("/api/admin/stats", {cache: "no-store"});
+                const data = await res.json();
+                if(data.products) {
+                    setSalesData(data.products);
+                }
+            } catch (error) {
+                console.error("Gagal memuat data penjualan:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchSalesData();
+    }, []);
+
+    const chartData = {
+        labels: salesData.map((data: any) => data.userName || "Unknown"),
+        datasets: [
+            {
+                label: "Statistik Penjualan",
+                data: salesData.map((data: any) => data.totalSales),
+                backgroundColor: "#ff66cc",
+            },
+        ],
+    };
+
+    if (loading || status === "loading") {
         return (
             <main className="min-h-screen flex items-center justify-center">
                 <p className="text-sm text-slate-400">Memuat dashboard admin...</p>
@@ -32,13 +67,13 @@ export default function adminPage() {
         <main className="min-h-screen flex items-center justify-center px-4">
             <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900/80 p-6">
                 <h1 className="text-xl font-semibold mb-3">Dashboard Admin</h1>
-                <p className="text-sm text-slate-300 mb-4">
-                    Halo, <span className="font-medium">{user.email}</span>. Disini akan ada manajemen produk dan pesanan
-                </p>
-
-                <div className="space-y-2 text-xs text-slate-400">
-                    <p>✅ Halaman ini hanya bisa diakses oleh user dengan role <b>Admin</b></p>
-                    <p>✅ Kita akan tambahkan CRUD produk & pesanan di tahap berikutnya.</p>
+                <div className="bg-slate-900 p-6 rounded-2xl">
+                    <h2 className="text-xl font-semibold mb-4">Statistik Penjualan</h2>
+                    {loading ? (
+                        <p>Memuat data...</p>
+                    ) : (
+                        <Bar data={chartData} options={{responsive: true}}/>
+                    )}
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-3 text-sm">

@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
 
-console.log("MONGODB_URI: ", process.env.MONGODB_URI);
-
-const MONGODB_URI = process.env.MONGODB_URI as string;
-if (!MONGODB_URI) {
+const uri = process.env.MONGODB_URI!;
+if (!uri) {
     throw new Error("MONGODB_URI is missing");
 }
 
@@ -18,7 +16,7 @@ if (!cached) {
 export async function connectDB() {
     if(cached.conn) return cached.conn;
     if(!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI)
+        cached.promise = mongoose.connect(uri)
     }
 
     cached.conn = await cached.promise;

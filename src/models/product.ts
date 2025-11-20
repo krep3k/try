@@ -14,7 +14,8 @@ const productSchema = new Schema(
         stock: {type: Number, default: 0},
         imageUrl: {type: String},
         category: {type: String},
-        isActive: {type: Boolean, default: true}
+        isActive: {type: Boolean, default: true},
+        userId: {type: Schema.Types.ObjectId, ref: "User", required: true},
     },
     {timestamps: true}
 );
